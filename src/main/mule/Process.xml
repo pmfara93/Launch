@@ -7,6 +7,7 @@
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="e2e2c98a-11c4-4763-8619-dac5430b0813" />
 	<flow name="ProcessFlow"
 		doc:id="20e16afc-6621-4a1c-9e78-5f01e6cf71cd">
 		<logger level="INFO" doc:name="StarterLog" doc:id="a517a40b-d85b-4a9c-9b90-5d63b833ea8f" />
@@ -19,14 +20,13 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 				<ee:set-variable variableName="object_default" ><![CDATA[%dw 2.0
 output application/json
 ---
-{
-}]]></ee:set-variable>
+payload]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<set-variable value="" doc:name="Id" doc:id="6a4e644a-d367-4873-b525-3205ae8121b7" />
+		<set-variable value="#[vars.object_default.Id]" doc:name="Id" doc:id="6a4e644a-d367-4873-b525-3205ae8121b7" variableName="id_countrie"/>
 		<choice doc:name="Choice" doc:id="7400f5ff-4428-407b-a8fd-29349b8b832c" >
-			<when >
-				<validation:is-not-null doc:name="Is not null_Id" doc:id="4ce82fae-4f99-444a-a845-9cd5da068b89" />
+			<when expression="#[vars.id_countrie !=null]">
+				<validation:is-not-null doc:name="Is not null_Id" doc:id="4ce82fae-4f99-444a-a845-9cd5da068b89" config-ref="Validation_Config" value="#[vars.id_countrie]"/>
 			</when>
 			<otherwise>
 				<raise-error doc:name="Raise error" doc:id="6c351180-9a2e-4689-98da-0603221a9ae1" />
