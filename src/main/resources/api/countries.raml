@@ -1,0 +1,45 @@
+#%RAML 1.0
+types:
+  Countries:
+    properties:
+      Name:
+        description: Name of countrie
+        example: Brasil
+        type: string
+      Id:
+        description: "in this field you can find the country identifier for each country "
+        example: 1
+        type: number
+        format: int
+      Description:
+        description: "At this , you can found a short description of the countrie that you can saw at the moment "
+        example: "Brasil is a Fantastic pleace to realx "
+        type: string
+      Aftermath:
+        description: "Here , you can see the aftermath of attack if the countrie is will attacked "
+        example: You have attacked the first fruit exporter, the population will suffer a nutrient deficiency
+        type: string
+title: Countries
+version: 1.0.0
+protocols:
+  - HTTPS
+  - HTTP
+/countries:
+  get:
+    responses:
+      "200":
+        description: |
+          "Paises obtenidos"
+        body:
+          application/json:
+            example:
+              strict: true
+              value:
+                Name: Brasil
+                Id: 1
+                Description: "Brasil is a Fantastic pleace to realx "
+                Aftermath: You have attacked the first fruit exporter, the population will suffer a nutrient deficiency
+            type: object
+mediaType:
+  - application/xml
+  - application/json

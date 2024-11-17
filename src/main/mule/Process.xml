@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="ProcessFlow"
+		doc:id="20e16afc-6621-4a1c-9e78-5f01e6cf71cd">
+		<logger level="INFO" doc:name="StarterLog" doc:id="a517a40b-d85b-4a9c-9b90-5d63b833ea8f" />
+		<set-payload value="#[payload]" doc:name="Set Payload"
+			doc:id="5bd37e07-8bd8-4447-98bf-7bf34490e3f1" />
+		<ee:transform doc:name="object_DesignCenter" doc:id="38a6d2d4-5d32-4af2-8b0a-4af223e01393" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="object_default" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<set-variable value="" doc:name="Id" doc:id="6a4e644a-d367-4873-b525-3205ae8121b7" />
+		<choice doc:name="Choice" doc:id="7400f5ff-4428-407b-a8fd-29349b8b832c" >
+			<when >
+				<validation:is-not-null doc:name="Is not null_Id" doc:id="4ce82fae-4f99-444a-a845-9cd5da068b89" />
+			</when>
+			<otherwise>
+				<raise-error doc:name="Raise error" doc:id="6c351180-9a2e-4689-98da-0603221a9ae1" />
+				<flow-ref doc:name="RestartProcess" doc:id="7aab3cae-0a0c-4732-adf5-4e1ae2427551" name="countries-main"/>
+			</otherwise>
+		</choice>
+		<db:select doc:name="Select_DataBase_Countries" doc:id="81e40b64-0bd8-4a21-a79f-e582e8c9962e" target="object_countrie"/>
+		<ee:transform doc:name="Match Between Objects" doc:id="9cbd061b-7780-4b53-bb39-ee36c32fd2ba" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="503f6e88-fd09-4ba4-af7d-eedc77295be9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+pluck(payload, (value, key, index) -> { 
+    (index): { 
+        (value): key
+    }
+})]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="EndLog" doc:id="79871cc0-5f37-4c08-ae87-d719acf87520" />
+	</flow>
+</mule>
