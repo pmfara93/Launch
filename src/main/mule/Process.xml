@@ -8,9 +8,12 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
 http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="e2e2c98a-11c4-4763-8619-dac5430b0813" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="5000266a-5d63-43da-a998-620d2821de7f" >
+		<db:my-sql-connection host="127.0.0.1" port="3306" user="root" password="root" database="Paises"/>
+	</db:config>
 	<flow name="ProcessFlow"
 		doc:id="20e16afc-6621-4a1c-9e78-5f01e6cf71cd">
-		<logger level="INFO" doc:name="StarterLog" doc:id="a517a40b-d85b-4a9c-9b90-5d63b833ea8f" />
+		<logger level="INFO" doc:name="StarterLog" doc:id="a517a40b-d85b-4a9c-9b90-5d63b833ea8f" message="#[payload]"/>
 		<set-payload value="#[payload]" doc:name="Set Payload"
 			doc:id="5bd37e07-8bd8-4447-98bf-7bf34490e3f1" />
 		<ee:transform doc:name="object_DesignCenter" doc:id="38a6d2d4-5d32-4af2-8b0a-4af223e01393" >
@@ -29,33 +32,51 @@ payload]]></ee:set-variable>
 				<validation:is-not-null doc:name="Is not null_Id" doc:id="4ce82fae-4f99-444a-a845-9cd5da068b89" config-ref="Validation_Config" value="#[vars.id_countrie]"/>
 			</when>
 			<otherwise>
-				<raise-error doc:name="Raise error" doc:id="6c351180-9a2e-4689-98da-0603221a9ae1" />
-				<flow-ref doc:name="RestartProcess" doc:id="7aab3cae-0a0c-4732-adf5-4e1ae2427551" name="countries-main"/>
+				<raise-error doc:name="Raise error" doc:id="6c351180-9a2e-4689-98da-0603221a9ae1" type="VALIDATION:NULL"/>
 			</otherwise>
 		</choice>
-		<db:select doc:name="Select_DataBase_Countries" doc:id="81e40b64-0bd8-4a21-a79f-e582e8c9962e" target="object_countrie"/>
+		<try doc:name="Try Conect to DB" doc:id="b38d2f29-8a88-4b2c-9c2a-b7b34abeee27" >
+			<db:select doc:name="Select_DataBase_Countries" doc:id="81e40b64-0bd8-4a21-a79f-e582e8c9962e" target="object_countrie" config-ref="Database_Config">
+				<db:sql ><![CDATA[SELECT * FROM Paises.Paises;]]></db:sql>
+				<db:input-parameters ><![CDATA[#[[{'IdCountry' :vars.id_countrie}]]]]></db:input-parameters>
+			</db:select>
+			<error-handler>
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="01ea6a45-5910-4da4-818b-ef4d6ae0db75" type="DB:CONNECTIVITY">
+					<ee:transform doc:name="Information Error" doc:id="714af39a-b080-4390-b0a2-22594db3d927">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var db_message = "Access Error To DB: Please , Check config Parameters"
+---
+db_message]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-continue>
+			</error-handler>
+		</try>
 		<ee:transform doc:name="Match Between Objects" doc:id="9cbd061b-7780-4b53-bb39-ee36c32fd2ba" >
 			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="array_db" ><![CDATA[%dw 2.0
 output application/json
 ---
-{
-	
-}]]></ee:set-payload>
-			</ee:message>
+[vars.object_countrie]]]></ee:set-variable>
+			</ee:variables>
 		</ee:transform>
-		<ee:transform doc:name="Transform Message" doc:id="503f6e88-fd09-4ba4-af7d-eedc77295be9" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+		<logger level="INFO" doc:name="EndLog" doc:id="79871cc0-5f37-4c08-ae87-d719acf87520" message="#[vars.array_db]"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="ca167919-259a-4784-8f29-ecd8bdcc2b28" type="VALIDATION:NULL">
+				<ee:transform doc:name="Information Error" doc:id="d5ab4b37-a1ab-43a3-a926-5038dadd4233" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
+var msg = "Id is empty , Null or incorrect"
 ---
-pluck(payload, (value, key, index) -> { 
-    (index): { 
-        (value): key
-    }
-})]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-		<logger level="INFO" doc:name="EndLog" doc:id="79871cc0-5f37-4c08-ae87-d719acf87520" />
+msg]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
 	</flow>
 </mule>
